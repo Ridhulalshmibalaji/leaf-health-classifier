@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaf Health Monitor</title>
+  <style>
+    :root {
+      --bg: #0f1410;
+      --surface: #1a231c;
+      --surface-2: #243028;
+      --text: #e8f0ea;
+      --muted: #9bb0a0;
+      --accent: #5ecf7a;
+      --border: #2f4034;
+      --healthy: #2ecc71;
+      --stress: #f1c40f;
+      --disease: #e67e22;
+      --dying: #e74c3c;
+      --low: #3498db;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(ellipse at top, #1a2e1f 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 0.35rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.35rem 1.5rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .card h2 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: var(--muted);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+
+    .input-group {
+      flex: 1;
+      min-width: 160px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--text);
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(94, 207, 122, 0.2);
+    }
+
+    .unit {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 1rem 0 0.25rem;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.75rem 1.25rem;
+      transition: transform 0.12s, opacity 0.12s;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0a120c;
+      align-self: flex-end;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      padding: 0.5rem 0.85rem;
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: var(--muted);
+    }
+
+    .result-placeholder {
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 1.5rem 0;
+    }
+
+    .result {
+      display: none;
+      text-align: center;
+    }
+
+    .result.visible {
+      display: block;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.1rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 1rem;
+      border: 2px solid transparent;
+    }
+
+    .badge .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .explanation {
+      text-align: left;
+      background: var(--surface-2);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      font-size: 0.92rem;
+      color: #c8d8cc;
+    }
+
+    .explanation p + p {
+      margin-top: 0.65rem;
+    }
+
+    .ohm-display {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.75rem;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .history-header h2 {
+      margin-bottom: 0;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.65rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .empty-history {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 0.5rem 0;
+    }
+
+    .disclaimer {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 1.5rem;
+      padding: 0.85rem 1rem;
+      border-left: 3px solid var(--border);
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .disclaimer strong {
+      color: #b8c9bc;
+    }
+
+    @media (max-width: 480px) {
+      .input-row {
+        flex-direction: column;
+      }
+      .btn-primary {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Leaf Health Monitor</h1>
+      <p>Electrical resistance (Ω) → plant status. Offline. No API. No cost.</p>
+    </header>
+
+    <section class="card" aria-labelledby="reading-heading">
+      <h2 id="reading-heading">New reading</h2>
+      <label for="resistance">Resistance (Ohms)</label>
+      <div class="input-row">
+        <div class="input-group">
+          <input
+            type="number"
+            id="resistance"
+            min="0"
+            max="150000"
+            step="100"
+            value="3000"
+            inputmode="numeric"
+            aria-describedby="unit-hint"
+          >
+          <p class="unit" id="unit-hint">Ω (ohms) — typical leaf sensor range: 1k–100k+</p>
+        </div>
+        <button type="button" class="btn-primary" id="saveBtn">Save to history</button>
+      </div>
+      <label for="slider" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;">Adjust with slider</label>
+      <input type="range" id="slider" min="0" max="150000" step="100" value="3000">
+      <div class="range-labels">
+        <span>0</span>
+        <span>5k</span>
+        <span>20k</span>
+        <span>80k</span>
+        <span>150k</span>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="result-heading">
+      <h2 id="result-heading">Result</h2>
+      <p class="result-placeholder" id="placeholder">Enter or slide a value to see classification.</p>
+      <div class="result" id="result" aria-live="polite">
+        <div class="badge" id="badge"><span class="dot"></span><span id="statusLabel"></span></div>
+        <div class="explanation" id="explanation"></div>
+        <p class="ohm-display" id="ohmDisplay"></p>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="history-heading">
+      <div class="history-header">
+        <h2 id="history-heading">History</h2>
+        <button type="button" class="btn-ghost" id="clearBtn">Clear all</button>
+      </div>
+      <div class="table-wrap">
+        <p class="empty-history" id="emptyHistory">No readings saved yet.</p>
+        <table id="historyTable" hidden>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Ω</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="disclaimer">
+      <strong>Science &amp; ethics note:</strong> This tool uses fixed resistance thresholds for education and quick field checks only.
+      Real plant health depends on species, soil, temperature, sensor placement, and calibration.
+      It is not a substitute for lab diagnosis or expert agronomy. Always verify unusual readings on-site.
+    </p>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "leafHealthHistory";
+
+    const TIERS = [
+      {
+        id: "low",
+        min: 0,
+        max: 1000,
+        label: "Very low reading",
+        emoji: "🔵",
+        color: "var(--low)",
+        lines: [
+          "Resistance below 1,000 Ω is unusually low for most leaf-electrode setups.",
+          "Check for short circuits, wet contacts, or a saturated leaf — not necessarily “extra healthy.”",
+          "Re-seat the sensor and repeat the reading before drawing conclusions."
+        ]
+      },
+      {
+        id: "healthy",
+        min: 1000,
+        max: 5000,
+        label: "Healthy",
+        emoji: "🟢",
+        color: "var(--healthy)",
+        lines: [
+          "1,000–5,000 Ω suggests good turgor and normal moisture pathways in the leaf tissue.",
+          "Electrical path through the leaf is relatively open — typical of unstressed, photosynthetically active plants.",
+          "Continue routine monitoring; note species-specific baselines if you track over time."
+        ]
+      },
+      {
+        id: "stress",
+        min: 5000,
+        max: 20000,
+        label: "Drought stress",
+        emoji: "🟡",
+        color: "var(--stress)",
+        lines: [
+          "5,000–20,000 Ω often appears when cells lose water and membranes become less conductive.",
+          "The plant may be closing stomata and slowing growth — irrigation or shade may help if soil is dry.",
+          "Compare with recent weather and soil moisture; stress can be reversible if caught early."
+        ]
+      },
+      {
+        id: "disease",
+        min: 20000,
+        max: 80000,
+        label: "Early disease",
+        emoji: "🟠",
+        color: "var(--disease)",
+        lines: [
+          "20,000–80,000 Ω can indicate damaged tissue, blocked pathways, or early pathogen stress.",
+          "Resistance rises as healthy conductive routes break down — watch for spots, wilting, or odor.",
+          "Isolate affected plants if infection is suspected and consider expert identification."
+        ]
+      },
+      {
+        id: "dying",
+        min: 80000,
+        max: Infinity,
+        label: "Dying",
+        emoji: "🔴",
+        color: "var(--dying)",
+        lines: [
+          "80,000 Ω and above suggests severe loss of viable tissue or a failing electrical contact.",
+          "Very high resistance means current barely flows — the leaf may be necrotic or the sensor misplaced.",
+          "Confirm electrode placement; if the leaf is visibly dead, remove it to limit spread to neighbors."
+        ]
+      }
+    ];
+
+    const input = document.getElementById("resistance");
+    const slider = document.getElementById("slider");
+    const result = document.getElementById("result");
+    const placeholder = document.getElementById("placeholder");
+    const badge = document.getElementById("badge");
+    const statusLabel = document.getElementById("statusLabel");
+    const explanation = document.getElementById("explanation");
+    const ohmDisplay = document.getElementById("ohmDisplay");
+    const saveBtn = document.getElementById("saveBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const historyBody = document.getElementById("historyBody");
+    const historyTable = document.getElementById("historyTable");
+    const emptyHistory = document.getElementById("emptyHistory");
+
+    function classify(ohms) {
+      const value = Number(ohms);
+      if (!Number.isFinite(value) || value < 0) {
+        return null;
+      }
+      for (const tier of TIERS) {
+        if (value >= tier.min && value < tier.max) {
+          return tier;
+        }
+      }
+      return TIERS[TIERS.length - 1];
+    }
+
+    function formatOhms(n) {
+      return Number(n).toLocaleString("en-US") + " Ω";
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function renderResult(ohms) {
+      const tier = classify(ohms);
+      if (!tier) {
+        result.classList.remove("visible");
+        placeholder.hidden = false;
+        placeholder.textContent = "Enter a valid non-negative resistance value.";
+        return;
+      }
+
+      placeholder.hidden = true;
+      result.classList.add("visible");
+      badge.style.color = tier.color;
+      badge.style.borderColor = tier.color;
+      badge.style.background = tier.color + "22";
+      statusLabel.textContent = tier.emoji + " " + tier.label;
+      explanation.innerHTML = tier.lines.map(function (line) {
+        return "<p>" + line + "</p>";
+      }).join("");
+      ohmDisplay.textContent = "Reading: " + formatOhms(ohms);
+    }
+
+    function syncFromInput() {
+      let v = parseFloat(input.value);
+      if (!Number.isFinite(v)) v = 0;
+      v = Math.max(0, Math.min(150000, v));
+      input.value = v;
+      slider.value = v;
+      renderResult(v);
+    }
+
+    function syncFromSlider() {
+      input.value = slider.value;
+      renderResult(slider.value);
+    }
+
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveHistory(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function renderHistory() {
+      const entries = loadHistory();
+      historyBody.innerHTML = "";
+
+      if (entries.length === 0) {
+        emptyHistory.hidden = false;
+        historyTable.hidden = true;
+        return;
+      }
+
+      emptyHistory.hidden = true;
+      historyTable.hidden = false;
+
+      entries.forEach(function (entry) {
+        const tier = classify(entry.ohms);
+        const tr = document.createElement("tr");
+        const pillStyle =
+          "background:" + (tier ? tier.color : "#666") + "33;color:" + (tier ? tier.color : "#ccc");
+        tr.innerHTML =
+          "<td>" + formatTime(entry.time) + "</td>" +
+          "<td>" + formatOhms(entry.ohms) + "</td>" +
+          '<td><span class="status-pill" style="' + pillStyle + '">' +
+          (tier ? tier.emoji + " " + tier.label : "—") +
+          "</span></td>";
+        historyBody.appendChild(tr);
+      });
+    }
+
+    function addToHistory() {
+      const ohms = parseFloat(input.value);
+      if (!Number.isFinite(ohms) || ohms < 0) return;
+
+      const entries = loadHistory();
+      entries.unshift({
+        ohms: ohms,
+        time: new Date().toISOString(),
+        status: classify(ohms)?.id || "unknown"
+      });
+      if (entries.length > 50) entries.length = 50;
+      saveHistory(entries);
+      renderHistory();
+    }
+
+    input.addEventListener("input", syncFromInput);
+    slider.addEventListener("input", syncFromSlider);
+    saveBtn.addEventListener("click", addToHistory);
+    clearBtn.addEventListener("click", function () {
+      if (confirm("Clear all saved readings?")) {
+        localStorage.removeItem(STORAGE_KEY);
+        renderHistory();
+      }
+    });
+
+    syncFromInput();
+    renderHistory();
+  </script>
+</body>
+</html>
